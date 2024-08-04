@@ -2,6 +2,9 @@ package com.github.travelbuddy.routes.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import java.util.Date;
 import java.util.List;
 
@@ -25,6 +28,7 @@ public class RouteDayEntity {
     @Column(name = "day", nullable = false)
     private Date day;
 
-    @OneToMany(mappedBy = "routeDay", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "routeDay",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Fetch(FetchMode.SUBSELECT)
     private List<RouteDayPlaceEntity> routeDayPlaces;
 }
