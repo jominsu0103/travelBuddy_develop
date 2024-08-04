@@ -2,6 +2,9 @@ package com.github.travelbuddy.board.repository;
 
 import com.github.travelbuddy.board.dto.BoardAllDto;
 import com.github.travelbuddy.board.entity.BoardEntity;
+import com.github.travelbuddy.routes.entity.RouteDayEntity;
+import com.github.travelbuddy.routes.entity.RouteEntity;
+import com.github.travelbuddy.trip.entity.TripEntity;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,25 +30,26 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Integer> {
     Long countLikesByBoardId(@Param("boardId") Integer boardId);
 
 
-    @Query(value = "SELECT b.id, b.title, b.summary, b.content, b.category, u.id, u.name AS author, u.profile_picture_url AS userProfile, " +
-                   "r.id, r.start_at, r.end_at, " +
-                   "COALESCE(l.like_count, 0) AS like_count, " +
-                   "pi.url AS image, " +
-                   "rd.day AS route_day, " +
-                   "rdp.place_name AS place_name, " +
-                   "rdp.place_category AS place_category, " +
-                   "t.id, t.age_min, t.age_max, t.target_number, t.participant_count, t.gender " +
-                   "FROM boards b " +
-                   "LEFT JOIN users u ON b.user_id = u.id " +
-                   "LEFT JOIN routes r ON b.route_id = r.id " +
-                   "LEFT JOIN post_imgs pi ON b.id = pi.post_id " +
-                   "LEFT JOIN (SELECT post_id, COUNT(*) AS like_count FROM likes GROUP BY post_id) l ON b.id = l.post_id " +
-                   "LEFT JOIN routes_day rd ON r.id = rd.routes_id " +
-                   "LEFT JOIN routes_day_place rdp ON rd.id = rdp.routes_day_id " +
-                   "LEFT JOIN trips t ON b.id = t.post_id " +
-                   "WHERE b.id = :postId " +
-                   "GROUP BY b.id, b.title, b.summary, b.content, b.category, u.id, u.name, r.id, r.start_at, r.end_at, l.like_count, pi.url, rd.day, rdp.place_name, rdp.place_category, t.id, t.age_min, t.age_max, t.target_number, t.participant_count, t.gender", nativeQuery = true)
-    List<Object[]> findPostDetailsById(@Param("postId") Integer postId);
+    @Query("SELECT b FROM BoardEntity b " +
+            "LEFT JOIN FETCH b.user u " +
+            "LEFT JOIN FETCH b.route r " +
+            "LEFT JOIN FETCH b.postImages pi " +
+            "WHERE b.id = :postId")
+    BoardEntity findPostDetailsById(@Param("postId") Integer postId);
+
+    @Query("SELECT r FROM RouteEntity r " +
+            "LEFT JOIN FETCH r.routeDays rd " +
+            "WHERE r.id = :routeId")
+    RouteEntity findRouteDetailsByRouteId(@Param("routeId") Integer routeId);
+
+    @Query("SELECT rd FROM RouteDayEntity rd " +
+            "LEFT JOIN FETCH rd.routeDayPlaces rdp " +
+            "WHERE rd.route.id = :routeId")
+    List<RouteDayEntity> findRouteDayDetailsByRouteId(@Param("routeId") Integer routeId);
+
+    @Query("SELECT t FROM TripEntity t " +
+            "WHERE t.board.id = :postId")
+    TripEntity findTripDetailsByPostId(@Param("postId") Integer postId);
 
     @Query("SELECT b.id, b.title, b.summary, pi.url, b.category , b.createdAt " +
             "FROM BoardEntity b " +
