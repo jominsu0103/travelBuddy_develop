@@ -11,6 +11,7 @@ import com.github.travelbuddy.likes.repository.LikesRepository;
 import com.github.travelbuddy.likes.service.LikesService;
 import com.github.travelbuddy.postImage.entity.PostImageEntity;
 import com.github.travelbuddy.postImage.repository.PostImageRepository;
+import com.github.travelbuddy.routes.entity.RouteDayEntity;
 import com.github.travelbuddy.routes.entity.RouteEntity;
 import com.github.travelbuddy.routes.repository.RouteRepository;
 import com.github.travelbuddy.trip.entity.TripEntity;
@@ -35,11 +36,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,66 +89,30 @@ public class BoardService {
     }
 
     public BoardDetailDto getPostDetails(Integer postId) {
-        List<Object[]> results = boardRepository.findPostDetailsById(postId);
+        BoardEntity boardEntity = boardRepository.findPostDetailsById(postId);
 
-        if (results == null || results.isEmpty()) {
-            log.error("No query result found for postId: " + postId);
+        if (boardEntity == null) {
+            log.error("이 게시물 아이디로 찾은 쿼리 결과가 없습니다. " + postId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시물의 관련된 정보를 찾을 수 없습니다.");
         }
 
-        Object[] firstRow = results.get(0);
+        Long likeCount = boardRepository.countLikesByBoardId(postId);
 
-        BoardDetailDto.BoardDto boardDto = new BoardDetailDto.BoardDto(
-                (Integer) firstRow[0],
-                (String) firstRow[1],
-                (String) firstRow[2],
-                (String) firstRow[3],
-                BoardEntity.Category.valueOf((String) firstRow[4]),
-                (Integer) firstRow[5],
-                (String) firstRow[6],
-                (String) firstRow[7],
-                ((Number) firstRow[11]).longValue(),
-                results.stream().map(row -> (String) row[12]).distinct().collect(Collectors.toList())
-        );
+        BoardDetailDto.BoardDto boardDto = BoardMapper.INSTANCE.toBoardDto(boardEntity);
+        boardDto.setLikeCount(likeCount);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Map<String, List<Map<String, String>>> sortedRouteDetails = new LinkedHashMap<>();
+        RouteEntity routeEntity = boardRepository.findRouteDetailsByRouteId(boardEntity.getRoute().getId());
+        List<RouteDayEntity> routeDayEntities = boardRepository.findRouteDayDetailsByRouteId(routeEntity.getId());
+        routeEntity.setRouteDays(routeDayEntities);
 
-        for (Object[] row : results) {
-            String routeDay = dateFormat.format((java.sql.Date) row[13]);
-            String placeName = (String) row[14];
-            String placeCategory = (String) row[15];
+        BoardDetailDto.RouteDto routeDto = BoardMapper.INSTANCE.toRouteDto(routeEntity);
 
-            Map<String, String> placeDetails = new LinkedHashMap<>();
-            placeDetails.put("placeName", placeName);
-            placeDetails.put("placeCategory", placeCategory);
-
-            if (!sortedRouteDetails.containsKey(routeDay)) {
-                sortedRouteDetails.put(routeDay, new ArrayList<>());
-            }
-            if (!sortedRouteDetails.get(routeDay).contains(placeDetails)) {
-                sortedRouteDetails.get(routeDay).add(placeDetails);
-            }
-        }
-
-        BoardDetailDto.RouteDto routeDto = new BoardDetailDto.RouteDto(
-                (Integer) firstRow[8],
-                (java.sql.Date) firstRow[9],
-                (java.sql.Date) firstRow[10],
-                sortedRouteDetails
-        );
-
-        BoardDetailDto.TripDto tripDto = new BoardDetailDto.TripDto(
-                (Integer) firstRow[16],
-                (Integer) firstRow[17],
-                (Integer) firstRow[18],
-                (Integer) firstRow[19],
-                (Integer) firstRow[20],
-                (String) firstRow[21]
-        );
+        TripEntity tripEntity = boardRepository.findTripDetailsByPostId(postId);
+        BoardDetailDto.TripDto tripDto = BoardMapper.INSTANCE.toTripDto(tripEntity);
 
         return new BoardDetailDto(boardDto, routeDto, tripDto);
     }
+
     public BoardResponseDto<BoardSimpleDto> getBoardsByUserAndCategory(CustomUserDetails userDetails, BoardEntity.Category category) {
         Integer userId = userDetails.getUserId();
         List<Object[]> results = boardRepository.findBoardsByUserIdAndCategory(userId, category);
