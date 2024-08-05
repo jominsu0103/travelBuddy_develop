@@ -312,10 +312,10 @@ public class BoardService {
 
         List<BoardEntity> boardEntities;
         if ("likes".equals(sortBy)) {
-            boardEntities = usersInTravelRepository.findParticipatedTripsByUserWithLikeCountAndCategory(userId, category, startDate, endDate, Sort.unsorted());
+            boardEntities = boardRepository.findParticipatedTripsByUserWithLikeCountAndCategory(userId, category, startDate, endDate, Sort.unsorted());
         } else {
             Sort sort = Sort.by(Sort.Order.by(sortBy).with(Sort.Direction.fromString(order)));
-            boardEntities = usersInTravelRepository.findParticipatedTripsByUserWithLikeCountAndCategory(userId, category, startDate, endDate, sort);
+            boardEntities = boardRepository.findParticipatedTripsByUserWithLikeCountAndCategory(userId, category, startDate, endDate, sort);
         }
 
         List<BoardAllDto> boardDtos = boardEntities.stream().map(board -> {

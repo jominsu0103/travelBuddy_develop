@@ -91,4 +91,19 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Integer> {
 
     @Query("SELECT COUNT(b.id) FROM BoardEntity b WHERE b.user.id = :userId and b.category = :category")
     Integer countByUserIdAndCategory(@Param("userId") Integer userId, @Param("category") BoardEntity.Category category);
+
+    @Query("SELECT b FROM BoardEntity b " +
+            "JOIN b.route r " +
+            "JOIN UsersInTravelEntity uit ON uit.trip.board.id = b.id " +
+            "WHERE uit.user.id = :userId " +
+            "AND (:category IS NULL OR b.category = :category) " +
+            "AND (:startDate IS NULL OR :endDate IS NULL OR (r.startAt <= :endDate AND r.endAt >= :startDate)) " +
+            "GROUP BY b.id " +
+            "ORDER BY b.createdAt DESC")
+    List<BoardEntity> findParticipatedTripsByUserWithLikeCountAndCategory(
+            @Param("userId") Integer userId,
+            @Param("category") BoardEntity.Category category,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            Sort sort);
 }
