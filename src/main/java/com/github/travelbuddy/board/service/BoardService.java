@@ -362,4 +362,6 @@ public class BoardService {
                 return new BoardMainSimpleDto(id, title, representativeImage, author, createdAt, likeCount);
             }).collect(Collectors.toList());
         }
+
+        // git push test
     }
