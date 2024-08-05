@@ -16,25 +16,6 @@ import java.util.Optional;
 
 @Repository
 public interface UsersInTravelRepository extends JpaRepository<UsersInTravelEntity , Integer> {
-    @Query("SELECT b " +
-            "FROM UsersInTravelEntity uit " +
-            "JOIN uit.trip t " +
-            "JOIN t.board b " +
-            "JOIN b.route r " +
-            "LEFT JOIN FETCH b.user u " +
-            "LEFT JOIN FETCH b.postImages pi " +
-            "LEFT JOIN LikesEntity l ON b.id = l.board.id " +
-            "WHERE uit.user.id = :userId " +
-            "AND (:category IS NULL OR b.category = :category) " +
-            "AND (:startDate IS NULL OR :endDate IS NULL OR (r.startAt <= :endDate AND r.endAt >= :startDate)) " +
-            "GROUP BY b.id, u.id, r.id, pi.id " +
-            "ORDER BY b.createdAt DESC")
-    List<BoardEntity> findParticipatedTripsByUserWithLikeCountAndCategory(
-            @Param("userId") Integer userId,
-            @Param("category") BoardEntity.Category category,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate,
-            Sort sort);
 
     Optional<UsersInTravelEntity> findByUserAndTrip(UserEntity user, TripEntity trip);
 
