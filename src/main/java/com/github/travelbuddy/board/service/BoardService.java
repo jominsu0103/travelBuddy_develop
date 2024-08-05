@@ -301,43 +301,43 @@ public class BoardService {
         boardRepository.delete(board);
     }
 
-    public BoardResponseDto<BoardAllDto> getParticipatedTripsByUser(CustomUserDetails userDetails , BoardEntity.Category category, Date startDate, Date endDate, String sortBy, String order) {
+    public BoardResponseDto<BoardAllDto> getParticipatedTripsByUser(CustomUserDetails userDetails, BoardEntity.Category category, Date startDate, Date endDate, String sortBy, String order) {
         Integer userId = userDetails.getUserId();
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
 
-        if (category.equals(BoardEntity.Category.REVIEW)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST , "리뷰 카테고리는 조회할 수 없습니다");
+        if (category.equals(BoardEntity.Category.REVIEW)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "리뷰 카테고리는 조회할 수 없습니다");
         }
 
-        List<Object[]> results = usersInTravelRepository.findBoardsByUserWithLikeCountAndCategory(user, category, startDate, endDate, sortBy, order);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        List<BoardEntity> boardEntities;
+        if ("likes".equals(sortBy)) {
+            boardEntities = usersInTravelRepository.findParticipatedTripsByUserWithLikeCountAndCategory(userId, category, startDate, endDate, Sort.unsorted());
+        } else {
+            Sort sort = Sort.by(Sort.Order.by(sortBy).with(Sort.Direction.fromString(order)));
+            boardEntities = usersInTravelRepository.findParticipatedTripsByUserWithLikeCountAndCategory(userId, category, startDate, endDate, sort);
+        }
 
-        List<BoardAllDto> participatedTrips = results.stream().map(result -> {
-            BoardEntity board = (BoardEntity) result[0];
-            Long likeCount = (Long) result[1];
-            String startAt = dateFormat.format(board.getRoute().getStartAt());
-            String endAt = dateFormat.format(board.getRoute().getEndAt());
-            return new BoardAllDto(
-                    board.getId(),
-                    board.getCategory(),
-                    board.getTitle(),
-                    board.getSummary(),
-                    board.getUser().getName(),
-                    startAt,
-                    endAt,
-                    board.getPostImages().isEmpty() ? null : board.getPostImages().get(0).getUrl(),
-                    likeCount
-            );
+        List<BoardAllDto> boardDtos = boardEntities.stream().map(board -> {
+            BoardAllDto dto = BoardMapper.INSTANCE.boardEntityToBoardAllDto(board);
+            Long likeCount = boardRepository.countLikesByBoardId(board.getId());
+            dto.setLikeCount(likeCount);
+            return dto;
         }).collect(Collectors.toList());
 
-        if(participatedTrips.isEmpty()) {
+        if ("likes".equals(sortBy)) {
+            boardDtos = boardDtos.stream()
+                    .sorted((b1, b2) -> "desc".equals(order) ? b2.getLikeCount().compareTo(b1.getLikeCount()) : b1.getLikeCount().compareTo(b2.getLikeCount()))
+                    .collect(Collectors.toList());
+        }
+
+        if (boardDtos.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "조회할 수 있는 데이터가 없습니다.");
-        }else {
-            String message = "참여한 여행 게시물을 성공적으로 조회했습니다.";
-            return new BoardResponseDto<>(message, participatedTrips);
         }
-        }
+
+        String message = "참여한 여행 게시물을 성공적으로 조회했습니다.";
+        return new BoardResponseDto<>(message, boardDtos);
+    }
 
         public BoardMainDto getTop4BoardsByCategories() {
             List<BoardMainSimpleDto> top4ReviewBoards = getTop4BoardsByCategory(BoardEntity.Category.REVIEW, "likeCount");

@@ -4,6 +4,7 @@ import com.github.travelbuddy.board.entity.BoardEntity;
 import com.github.travelbuddy.trip.entity.TripEntity;
 import com.github.travelbuddy.users.entity.UserEntity;
 import com.github.travelbuddy.usersInTravel.entity.UsersInTravelEntity;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,30 +16,25 @@ import java.util.Optional;
 
 @Repository
 public interface UsersInTravelRepository extends JpaRepository<UsersInTravelEntity , Integer> {
-    @Query("SELECT b, COUNT(l.id) as likeCount " +
-            "FROM UsersInTravelEntity u " +
-            "JOIN u.trip t " +
+    @Query("SELECT b " +
+            "FROM UsersInTravelEntity uit " +
+            "JOIN uit.trip t " +
             "JOIN t.board b " +
             "JOIN b.route r " +
+            "LEFT JOIN FETCH b.user u " +
+            "LEFT JOIN FETCH b.postImages pi " +
             "LEFT JOIN LikesEntity l ON b.id = l.board.id " +
-            "WHERE u.user = :user " +
+            "WHERE uit.user.id = :userId " +
             "AND (:category IS NULL OR b.category = :category) " +
-            "AND (:startDate IS NULL OR :endDate IS NULL OR (DATE(r.startAt) <= DATE(:endDate) AND DATE(r.endAt) >= DATE(:startDate))) " +
-            "GROUP BY b " +
-            "ORDER BY " +
-            "CASE WHEN :sortBy = 'createdAt' AND :order = 'desc' THEN b.createdAt END DESC, " +
-            "CASE WHEN :sortBy = 'createdAt' AND :order = 'asc' THEN b.createdAt END ASC, " +
-            "CASE WHEN :sortBy = 'likes' AND :order = 'desc' THEN COUNT(l.id) END DESC, " +
-            "CASE WHEN :sortBy = 'likes' AND :order = 'asc' THEN COUNT(l.id) END ASC, " +
-            "CASE WHEN :sortBy = 'title' AND :order = 'desc' THEN b.title END DESC, " +
-            "CASE WHEN :sortBy = 'title' AND :order = 'asc' THEN b.title END ASC")
-    List<Object[]> findBoardsByUserWithLikeCountAndCategory(
-            @Param("user") UserEntity user,
+            "AND (:startDate IS NULL OR :endDate IS NULL OR (r.startAt <= :endDate AND r.endAt >= :startDate)) " +
+            "GROUP BY b.id, u.id, r.id, pi.id " +
+            "ORDER BY b.createdAt DESC")
+    List<BoardEntity> findParticipatedTripsByUserWithLikeCountAndCategory(
+            @Param("userId") Integer userId,
             @Param("category") BoardEntity.Category category,
             @Param("startDate") Date startDate,
             @Param("endDate") Date endDate,
-            @Param("sortBy") String sortBy,
-            @Param("order") String order);
+            Sort sort);
 
     Optional<UsersInTravelEntity> findByUserAndTrip(UserEntity user, TripEntity trip);
 
