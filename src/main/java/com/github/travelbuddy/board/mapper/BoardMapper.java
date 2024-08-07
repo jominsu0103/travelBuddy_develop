@@ -2,6 +2,7 @@ package com.github.travelbuddy.board.mapper;
 
 import com.github.travelbuddy.board.dto.BoardAllDto;
 import com.github.travelbuddy.board.dto.BoardDetailDto;
+import com.github.travelbuddy.board.dto.BoardSimpleDto;
 import com.github.travelbuddy.board.entity.BoardEntity;
 import com.github.travelbuddy.postImage.entity.PostImageEntity;
 import com.github.travelbuddy.routes.entity.RouteDayEntity;
@@ -13,6 +14,8 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,5 +69,13 @@ public interface BoardMapper {
                         LinkedHashMap::new,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())
                 ));
+    }
+
+    @Mapping(target = "createdAt", expression = "java(formatDateTime(board.getCreatedAt()))")
+    @Mapping(target = "representativeImage", source = "representativeImage")
+    BoardSimpleDto boardEntityToBoardSimpleDto(BoardEntity board, String representativeImage);
+
+    default String formatDateTime(LocalDateTime dateTime) {
+        return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }
