@@ -1,6 +1,7 @@
 package com.github.travelbuddy.board.repository;
 
 import com.github.travelbuddy.board.dto.BoardAllDto;
+import com.github.travelbuddy.board.dto.BoardSimpleDto;
 import com.github.travelbuddy.board.entity.BoardEntity;
 import com.github.travelbuddy.routes.entity.RouteDayEntity;
 import com.github.travelbuddy.routes.entity.RouteEntity;
@@ -51,12 +52,11 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Integer> {
             "WHERE t.board.id = :postId")
     TripEntity findTripDetailsByPostId(@Param("postId") Integer postId);
 
-    @Query("SELECT b.id, b.title, b.summary, pi.url, b.category , b.createdAt " +
+    @Query("SELECT b " +
             "FROM BoardEntity b " +
-            "LEFT JOIN b.postImages pi ON pi.id = (SELECT MIN(pi2.id) FROM PostImageEntity pi2 WHERE pi2.board.id = b.id)" +
-            "WHERE b.user.id = :userId AND b.category = :category " +
-            "GROUP BY b.id, pi.url")
-    List<Object[]> findBoardsByUserIdAndCategory(@Param("userId") Integer userId, @Param("category") BoardEntity.Category category);
+            "LEFT JOIN FETCH b.postImages pi " +
+            "WHERE b.user.id = :userId AND b.category = :category")
+    List<BoardEntity> findBoardsByUserIdAndCategory(@Param("userId") Integer userId, @Param("category") BoardEntity.Category category);
 
     @Query("SELECT b " +
             "FROM BoardEntity b " +

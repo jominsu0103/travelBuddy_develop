@@ -115,16 +115,11 @@ public class BoardService {
 
     public BoardResponseDto<BoardSimpleDto> getBoardsByUserAndCategory(CustomUserDetails userDetails, BoardEntity.Category category) {
         Integer userId = userDetails.getUserId();
-        List<Object[]> results = boardRepository.findBoardsByUserIdAndCategory(userId, category);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        List<BoardSimpleDto> boardSimpleDtos =  results.stream().map(result -> new BoardSimpleDto(
-                (Integer) result[0],
-                (String) result[1],
-                (String) result[2],
-                (String) result[3],
-                (BoardEntity.Category) result[4],
-                ((LocalDateTime) result[5]).format(formatter)
-        )).collect(Collectors.toList());
+        List<BoardEntity> boardEntities = boardRepository.findBoardsByUserIdAndCategory(userId, category);
+        List<BoardSimpleDto> boardSimpleDtos = boardEntities.stream().map(board -> {
+            String representativeImage = board.getPostImages().isEmpty() ? null : board.getPostImages().get(0).getUrl();
+            return BoardMapper.INSTANCE.boardEntityToBoardSimpleDto(board, representativeImage);
+        }).collect(Collectors.toList());
 
         String message;
         if (boardSimpleDtos.isEmpty()) {
@@ -142,9 +137,9 @@ public class BoardService {
                     message = "아직 작성한 게시물이 없습니다.";
             }
         } else {
-            message = "게시물을 성공정으로 조회했습니다.";
+            message = "게시물을 성공적으로 조회했습니다.";
         }
-        return new BoardResponseDto<>(message , boardSimpleDtos);
+        return new BoardResponseDto<>(message, boardSimpleDtos);
     }
 
     public List<BoardAllDto> getLikedPostsByUser(CustomUserDetails userDetails, BoardEntity.Category category, Date startDate, Date endDate, String sortBy, String order) {
