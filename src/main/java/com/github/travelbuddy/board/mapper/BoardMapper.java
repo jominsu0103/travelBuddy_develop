@@ -2,15 +2,14 @@ package com.github.travelbuddy.board.mapper;
 
 import com.github.travelbuddy.board.dto.BoardAllDto;
 import com.github.travelbuddy.board.dto.BoardDetailDto;
+import com.github.travelbuddy.board.dto.BoardMainSimpleDto;
 import com.github.travelbuddy.board.dto.BoardSimpleDto;
 import com.github.travelbuddy.board.entity.BoardEntity;
 import com.github.travelbuddy.postImage.entity.PostImageEntity;
 import com.github.travelbuddy.routes.entity.RouteDayEntity;
 import com.github.travelbuddy.routes.entity.RouteEntity;
 import com.github.travelbuddy.trip.entity.TripEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import java.text.SimpleDateFormat;
@@ -77,5 +76,16 @@ public interface BoardMapper {
 
     default String formatDateTime(LocalDateTime dateTime) {
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    @Mapping(target = "createdAt", expression = "java(formatDateTime(board.getCreatedAt()))")
+    @Mapping(target = "representativeImage", expression = "java(getRepresentativeImage(board))")
+    @Mapping(target = "author", source = "board.user.name")
+    @Mapping(target = "likeCount", ignore = true)
+    BoardMainSimpleDto boardEntityToBoardMainSimpleDto(BoardEntity board);
+
+
+    default String getRepresentativeImage(BoardEntity board) {
+        return board.getPostImages().isEmpty() ? null : board.getPostImages().get(0).getUrl();
     }
 }
