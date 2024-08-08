@@ -75,19 +75,16 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Integer> {
             @Param("endDate") Date endDate,
             Sort sort);
 
-    @Query("SELECT b.id, b.title, b.createdAt, u.name, COUNT(l.id) as likeCount," +
-            "(SELECT pi.url FROM PostImageEntity pi WHERE pi.board.id = b.id ORDER BY pi.id LIMIT 1) as representativeImage " +
-            "FROM BoardEntity b LEFT JOIN LikesEntity l ON b.id = l.board.id " +
-            "JOIN UserEntity u ON b.user.id = u.id " +
+    @Query("SELECT b " +
+            "FROM BoardEntity b " +
+            "LEFT JOIN FETCH b.user u " +
+            "LEFT JOIN FETCH b.postImages pi " +
             "WHERE b.category = :category " +
-            "GROUP BY b.id, b.title, b.createdAt " +
+            "GROUP BY b.id, u.id, pi.id " +
             "ORDER BY " +
-            "CASE WHEN :sortBy = 'likeCount' THEN COUNT(l.id) END DESC, " +
-            "CASE WHEN :sortBy = 'createdAt' THEN b.createdAt END DESC " +
-            "LIMIT 4")
-    List<Object[]> findTop4BoardsByCategoryWithRepresentativeImage(
-            @Param("category") BoardEntity.Category category,
-            @Param("sortBy") String sortBy);
+            "CASE WHEN :sortBy = 'likeCount' THEN (SELECT COUNT(l) FROM LikesEntity l WHERE l.board.id = b.id) END DESC, " +
+            "CASE WHEN :sortBy = 'createdAt' THEN b.createdAt END DESC")
+    List<BoardEntity> findTop4BoardsByCategory(@Param("category") BoardEntity.Category category, @Param("sortBy") String sortBy);
 
     @Query("SELECT COUNT(b.id) FROM BoardEntity b WHERE b.user.id = :userId and b.category = :category")
     Integer countByUserIdAndCategory(@Param("userId") Integer userId, @Param("category") BoardEntity.Category category);

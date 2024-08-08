@@ -343,18 +343,12 @@ public class BoardService {
         }
 
         private List<BoardMainSimpleDto> getTop4BoardsByCategory(BoardEntity.Category category, String sortBy) {
-            List<Object[]> results = boardRepository.findTop4BoardsByCategoryWithRepresentativeImage(category, sortBy);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-            return results.stream().map(result -> {
-                Integer id = (Integer) result[0];
-                String title = (String) result[1];
-                String createdAt = ((LocalDateTime) result[2]).format(formatter);
-                String author = (String) result[3];
-                Long likeCount = (Long) result[4];
-                String representativeImage = (String) result[5];
-
-                return new BoardMainSimpleDto(id, title, representativeImage, author, createdAt, likeCount);
+            List<BoardEntity> boardEntities = boardRepository.findTop4BoardsByCategory(category, sortBy);
+            return boardEntities.stream().map(board -> {
+                Long likeCount = boardRepository.countLikesByBoardId(board.getId());
+                BoardMainSimpleDto dto  = BoardMapper.INSTANCE.boardEntityToBoardMainSimpleDto(board);
+                dto.setLikeCount(likeCount);
+                return dto;
             }).collect(Collectors.toList());
         }
 
