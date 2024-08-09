@@ -66,6 +66,7 @@ public class BoardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String order) {
+        log.info("내가 추천한 게시물 조회 API 실행");
         List<BoardAllDto> likedPosts = boardService.getLikedPostsByUser(userDetails, category, startDate, endDate, sortBy, order);
         String message = likedPosts.isEmpty() ? "추천한 게시물이 없습니다." : "추천한 게시물을 성공적으로 조회했습니다.";
         return ResponseEntity.ok(new BoardResponseDto<>(message, likedPosts));
@@ -74,6 +75,7 @@ public class BoardController {
     @PostMapping
     public ResponseEntity<?> createPost(@AuthenticationPrincipal CustomUserDetails userDetails, @ModelAttribute BoardCreateDto createDto){
         try {
+            log.info("게시물 등록 API 실행");
             log.info("createDto" ,createDto);
             boardService.createBoard(createDto, userDetails);
             return ResponseEntity.status(HttpStatus.CREATED).body("게시물이 성공적으로 등록되었습니다.");
@@ -86,6 +88,7 @@ public class BoardController {
     @PutMapping("/{postId}")
     public ResponseEntity<?> updatePost(@AuthenticationPrincipal CustomUserDetails userDetails , @ModelAttribute BoardCreateDto updateDto , @PathVariable Integer postId){
         try{
+            log.info("게시물 수정 API 실행");
             boardService.updateBoard(updateDto , userDetails , postId);
             return ResponseEntity.status(HttpStatus.OK).body("게시물이 성공적으로 수정되었습니다.");
         }catch (IOException e){
@@ -97,6 +100,7 @@ public class BoardController {
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(@PathVariable Integer postId, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
+            log.info("게시물 삭제 API 실행");
             boardService.deleteBoard(postId, userDetails);
             return ResponseEntity.status(HttpStatus.OK).body("게시물이 성공적으로 삭제되었습니다.");
         } catch (IllegalArgumentException e) {
@@ -113,12 +117,14 @@ public class BoardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String order) {
+        log.info("내가 참여한 여행 게시물 조회 API 실행");
         BoardResponseDto<BoardAllDto> participatedTrips = boardService.getParticipatedTripsByUser(userDetails, category, startDate, endDate, sortBy, order);
         return ResponseEntity.ok(participatedTrips);
     }
 
     @GetMapping("/top4-categories")
     public ResponseEntity<BoardMainDto> getTop4BoardsByCategories() {
+        log.info("메인 페이지 게시물 조회 API 실행");
         BoardMainDto response = boardService.getTop4BoardsByCategories();
         return ResponseEntity.ok(response);
     }
