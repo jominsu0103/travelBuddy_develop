@@ -32,12 +32,14 @@ public class BoardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
             @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String order) {
+        log.info("게시물 전체조회 API 실행");
         return boardService.getAllBoards(category, startDate, endDate, sortBy, order);
     }
 
     @GetMapping("/{postId}")
     public ResponseEntity<?> getPostDetails(@PathVariable Integer postId) {
         try{
+            log.info("게시물 상세조회 API 실행");
             BoardDetailDto boardDetailDto =  boardService.getPostDetails(postId);
             return ResponseEntity.status(HttpStatus.OK).body(boardDetailDto);
         }catch (ResponseStatusException e){
@@ -51,6 +53,7 @@ public class BoardController {
     public ResponseEntity<?> getBoardsByUserAndCategory(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false , defaultValue = "REVIEW") BoardEntity.Category category) {
+            log.info("내가 작성한 게시물 조회 API 실행");
             BoardResponseDto<BoardSimpleDto> results = boardService.getBoardsByUserAndCategory(userDetails, category);
             return ResponseEntity.status(HttpStatus.OK).body(results);
     }
