@@ -56,12 +56,6 @@ public class BoardService {
     private final CommentRepository commentRepository;
 
     public List<BoardAllDto> getAllBoards(String category, Date startDate, Date endDate, String sortBy, String order) {
-        log.info("Category: " + category);
-        log.info("StartDate: " + startDate);
-        log.info("EndDate: " + endDate);
-        log.info("SortBy: " + sortBy);
-        log.info("Order: " + order);
-
         BoardEntity.Category categoryEnum = category != null ? BoardEntity.Category.valueOf(category) : null;
 
         List<BoardEntity> boardEntities;
