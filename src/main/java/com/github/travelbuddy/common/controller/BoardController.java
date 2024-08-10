@@ -76,7 +76,6 @@ public class BoardController {
     public ResponseEntity<?> createPost(@AuthenticationPrincipal CustomUserDetails userDetails, @ModelAttribute BoardCreateDto createDto){
         try {
             log.info("게시물 등록 API 실행");
-            log.info("createDto" ,createDto);
             boardService.createBoard(createDto, userDetails);
             return ResponseEntity.status(HttpStatus.CREATED).body("게시물이 성공적으로 등록되었습니다.");
         } catch (IOException e) {
