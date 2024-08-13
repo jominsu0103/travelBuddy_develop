@@ -59,6 +59,7 @@ public class BoardService {
         BoardEntity.Category categoryEnum = category != null ? BoardEntity.Category.valueOf(category) : null;
 
         List<BoardEntity> boardEntities;
+        //TODO : likes로 넣지말고 controller에서 sort로 넘기기
         if ("likes".equals(sortBy)) {
             boardEntities = boardRepository.findAllWithRepresentativeImageAndDateRange(categoryEnum, startDate, endDate, Sort.unsorted());
         } else {
@@ -115,6 +116,7 @@ public class BoardService {
             return BoardMapper.INSTANCE.boardEntityToBoardSimpleDto(board, representativeImage);
         }).collect(Collectors.toList());
 
+        //TODO : message controller로 빼기
         String message;
         if (boardSimpleDtos.isEmpty()) {
             switch (category) {
