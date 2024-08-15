@@ -60,6 +60,7 @@ public class BoardService {
 
         List<BoardEntity> boardEntities;
         //TODO : likes로 넣지말고 controller에서 sort로 넘기기
+        //TODO : 페이징 처리 무한스크롤을 위한다면 좀 더 알아보기
         if ("likes".equals(sortBy)) {
             boardEntities = boardRepository.findAllWithRepresentativeImageAndDateRange(categoryEnum, startDate, endDate, Sort.unsorted());
         } else {
