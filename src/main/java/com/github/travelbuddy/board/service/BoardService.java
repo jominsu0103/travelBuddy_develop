@@ -140,6 +140,8 @@ public class BoardService {
     }
 
     public List<BoardAllDto> getLikedPostsByUser(CustomUserDetails userDetails, BoardEntity.Category category, Date startDate, Date endDate, String sortBy, String order) {
+        //TODO : 밑에 있는 로그 테스트 후 삭제
+
         log.info("UserId: " + userDetails.getUserId());
         log.info("Category: " + category);
         log.info("StartDate: " + startDate);
