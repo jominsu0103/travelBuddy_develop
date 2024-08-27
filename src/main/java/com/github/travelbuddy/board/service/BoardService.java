@@ -341,6 +341,4 @@ public class BoardService {
                 return dto;
             }).collect(Collectors.toList());
         }
-
-        // git push test
     }
